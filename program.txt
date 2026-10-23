@@ -1,0 +1,26 @@
+;  --------------------------------------------------------------------
+;  Memory Storage and Retrieval
+;  Stores three values in memory, retrieves them into registers,
+;              and displays the retrieved values.
+;  0A (10), 0F (15), 14 (20)
+;  A0, A1, A2
+; R0-R2 for storing, R4-R6 for retrieval
+;  --------------------------------------------------------------------
+200A  ; Load value 0A into R0
+30A0  ; Store R0 in memory address A0
+
+210F  ; Load value 0F into R1
+31A1  ; Store R1 in memory address A1
+
+2214  ; Load value 14 into R2
+32A2  ; Store R2 in memory address A2
+
+14A0  ; Load value from memory A0 into R4
+15A1  ; Load value from memory A1 into R5
+16A2  ; Load value from memory A2 into R6
+
+34FF  ; Display the value in R4
+35FF  ; Display the value in R5
+36FF  ; Display the value in R6
+
+C000  ; Halt the program
