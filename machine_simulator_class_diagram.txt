@@ -1,5 +1,5 @@
 @startuml
-title Memory Swap Simulator - Class Diagram
+title Machine Simulator - Combined Class Diagram
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
@@ -10,6 +10,7 @@ package "UI" {
   class SimulatorUI {
     - cpu : CPU
     - memory : Memory
+    - registerFile : RegisterFile
     + displayMenu() : void
     + loadProgramFile(filename : String, startAddress : int) : void
     + overwriteCellOrRegister(target : String, location : int, value : String) : void
@@ -83,8 +84,9 @@ package "HexUtils" {
 
 SimulatorUI "1" *-- "1" CPU : creates and manages
 SimulatorUI "1" *-- "1" Memory : creates and manages
-CPU "1" *-- "1" RegisterFile
-CPU "1" *-- "1" ALU
+SimulatorUI "1" o-- "1" RegisterFile : uses
+CPU "1" *-- "1" RegisterFile : owns
+CPU "1" *-- "1" ALU : owns
 CPU "1" --> "1" Memory : fetches instructions,\nreads/writes data
 CPU ..> Instruction : decodes into
 
@@ -113,8 +115,8 @@ end note
 
 note bottom of SimulatorUI
   loadProgramFile() parses the program file
-  (e.g. 21AA, 31A0, ... C000) and ignores
-  comments and empty lines
+  (e.g. 200A, 30A0, 21AA, 31A0, ... C000)
+  and ignores comments and empty lines
 end note
 
 @enduml
