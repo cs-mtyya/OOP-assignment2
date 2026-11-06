@@ -6,6 +6,7 @@
 using namespace std;
 
 class Screen : public IMemoryMappedDevice {
+    
     private:    
     string outputBuffer;
 
