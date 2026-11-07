@@ -4,25 +4,24 @@
 #include <cstdint>
 #include <array>
 #include <map>
-using namespace std;
+#include <vector>
+
 
 
 class Memory {
     private:    
-    array<uint8_t, 256> cells;    
-    map<uint8_t, IMemoryMappedDevice*> devices;
+    std::array<uint8_t, 256> memory;    
+    std::map<uint8_t, IMemoryMappedDevice*> devices;
 
 
-    public:    
+    public:   
+    Memory(); 
     uint8_t read(uint8_t address);    
     void write(uint8_t address, uint8_t value);    
     void mapDevice(uint8_t address, IMemoryMappedDevice* device);    
     void clear();
 
+    void loadProgram(uint8_t startAddress, const std::vector<uint8_t>& bytes);
 };
-
-
-
-
 
 #endif

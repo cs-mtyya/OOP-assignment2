@@ -1,7 +1,7 @@
 #ifndef SIMULATOR_UI_H
 #define SIMULATOR_UI_H
 #include <iostream>
-#include "VoleMachine.h" 
+#include "Vole_machine.h" 
 
 class SimulatorUI {
 private:
