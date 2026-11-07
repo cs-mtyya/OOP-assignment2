@@ -2,7 +2,9 @@
 
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <sstream>
+#include <string>
 
 namespace {
 double decodeFloatByte(std::uint8_t bits) noexcept {
@@ -44,8 +46,9 @@ std::uint8_t encodeFloatByte(double value) noexcept {
 
 std::string invalidMessage(std::uint16_t word, std::uint8_t address) {
     std::ostringstream out;
-    out << "Invalid instruction 0x" << std::hex << word
-        << " at address 0x" << static_cast<unsigned>(address) << '.';
+    out << "Invalid instruction 0x" << std::uppercase << std::hex
+        << std::setfill('0') << std::setw(4) << word
+        << " at address 0x" << std::setw(2) << static_cast<unsigned>(address) << '.';
     return out.str();
 }
 }
