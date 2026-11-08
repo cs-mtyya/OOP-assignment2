@@ -6,4 +6,12 @@
 #include "CPU.h"
 #include "ALU.h"
 #include "ProgramLoader.h"
+#include "SimulatorUI.h"
 using namespace std;
+
+
+int main() {
+    SimulatorUI ui;
+    ui.getUserInput();
+    return 0;
+}

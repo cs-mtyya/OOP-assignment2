@@ -11,45 +11,50 @@ void SimulatorUI::displayMenu() {
     std::cout<< "Choose:";
 }
 void SimulatorUI::getUserInput() {
-    int choice;
-    displayMenu();
-    std::cin >> choice;
-    if (choice == 1) {
-        std::string name;
-        int address;
-        std::cout<< "Enter program name:";
-        std::cin>> name;
-        std::cout<< "Enter memory address (Hex,even number):";
-        std::cin>> std::hex >> address;
-        
-        
-        machine.loadProgram(name, address);
-    } else if (choice == 3) {
-        startExecution();
+while (true) {
+        int choice;
+        displayMenu();
+
+        if (!(std::cin >> choice)) {
+            return;
+        }
+
+        if (choice == 1) {
+            std::string name;
+            int address;
+            std::cout << "Enter program name: ";
+            std::cin >> name;
+            std::cout << "Enter memory address (Hex, even number): ";
+            std::cin >> std::hex >> address >> std::dec;
+
+            machine.loadProgram(name, address);
+        } else if (choice == 2) {
+            std::cout << "Overwrite is not implemented yet.\n";
+        } else if (choice == 3) {
+            startExecution();
+        } else if (choice == 4) {
+            return;
+        } else {
+            std::cout << "Invalid choice.\n";
+        }
     }
 }
 void SimulatorUI::showMachineState() {
     std::cout<< "\nCPU & Memory State\n";
-    std::cout<< "PC: " << std::hex << machine.getPC() 
-            << " | IR: " << machine.getIR() << "\n";
-    
-   
+    machine.showStatus();
 }
 void SimulatorUI::startExecution() {
     int mode;
     std::cout<< "Mode (1-Run All, 2-Step by Step): ";
     std::cin>> mode;
-    while (machine.isRunning()) {
-        machine.executeStep();
-        
-        if (mode == 2) {
-            showMachineState(); 
-            std::cout<< "Press enter to execute";
-            std::cin.ignore();
-            std::cin.get();
-        }
-    }
     if (mode == 1) {
+        machine.run();
         showMachineState(); 
+    } else if (mode == 2) {
+        machine.step();
+        showMachineState();
+        std::cout<< "Press enter to execute";
+        std::cin.ignore();
+        std::cin.get();
     }
 }
