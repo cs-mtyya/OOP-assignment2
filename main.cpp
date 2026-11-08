@@ -4,7 +4,6 @@
 #include "RegisterFile.h"
 #include "Screen.h"
 #include "CPU.h"
-#include "ALU.h"
 #include "ProgramLoader.h"
 #include "SimulatorUI.h"
 using namespace std;

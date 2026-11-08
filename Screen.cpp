@@ -2,7 +2,7 @@
 #include <string>
 
 void Screen::writeToDevice(uint8_t value) {
-    outputBuffer += std::to_string(value);
+    outputBuffer += std::to_string(value) + " ";
 }
 
 uint8_t Screen::readFromDevice() {

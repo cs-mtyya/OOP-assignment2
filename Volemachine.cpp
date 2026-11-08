@@ -1,8 +1,27 @@
 #include "Vole_machine.h"
-
 #include <iomanip>
 #include <iostream>
 #include <vector>
+
+void VoleMachine::runStepMode() {
+    std::cin.ignore(256, '\n'); 
+
+    while (!cpu.isHalted()) {
+        step();         
+        showStatus();   
+
+        if (cpu.isHalted()) break;
+        
+        std::cout << "Press Enter to execute the next step..." << std::endl;
+        std::cin.get(); 
+    }
+    
+    if (!cpu.getErrorMessage().empty()) {
+        std::cerr << "CPU Error: " << cpu.getErrorMessage() << std::endl;
+    } else {
+        std::cout << "Program finished (Halt instruction reached)." << std::endl;
+    }
+}
 
 VoleMachine::VoleMachine() {
     memory.mapDevice(0xFF, &screen);
@@ -17,14 +36,27 @@ bool VoleMachine::loadProgram(const std::string& fileName, uint8_t startAddress)
     }
 
     memory.clear();
+    registers.reset();
+    screen.clear();
     memory.loadProgram(startAddress, program);
     cpu.reset(startAddress);
     return true;
 }
 
 void VoleMachine::run() {
-    while (!cpu.isHalted()) {
+    const int MAX_STEPS = 10000;
+    int stepCount = 0;
+
+    while (!cpu.isHalted() && stepCount < MAX_STEPS) {
         step();
+        stepCount++;
+    }
+
+    if (stepCount >= MAX_STEPS) {
+        std::cout << "Warning: Maximum step limit (" << MAX_STEPS 
+                  << ") reached. Execution halted to prevent an infinite loop.\n";
+    } else if (!cpu.getErrorMessage().empty()) {
+        std::cerr << "CPU Error: " << cpu.getErrorMessage() << "\n";
     }
 }
 

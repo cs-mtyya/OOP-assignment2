@@ -24,7 +24,7 @@ struct StepResult {
 class CPU {
 public:
     CPU() noexcept;
-
+    std::string getErrorMessage() const { return errorMessage; };
     StepResult step(Memory& memory, RegisterFile& registers);
     void reset(std::uint8_t startAddress = 0) noexcept;
 
@@ -33,6 +33,7 @@ public:
     bool isHalted() const noexcept;
 
 private:
+std::string errorMessage;
     std::uint8_t pc_;
     std::uint16_t ir_;
     bool halted_;

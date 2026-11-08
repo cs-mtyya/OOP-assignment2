@@ -13,7 +13,7 @@ class Screen : public IMemoryMappedDevice {
     public:    
     void writeToDevice(uint8_t value) override;    
     uint8_t readFromDevice() override;    
-    std::string getOutput() const;;    
+    std::string getOutput() const;    
     void clear();
 
 };

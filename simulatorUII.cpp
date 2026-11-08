@@ -11,7 +11,9 @@ void SimulatorUI::displayMenu() {
     std::cout<< "Choose:";
 }
 void SimulatorUI::getUserInput() {
-while (true) {
+    bool programLoaded = false;
+
+    while (true) {
         int choice;
         displayMenu();
 
@@ -27,11 +29,59 @@ while (true) {
             std::cout << "Enter memory address (Hex, even number): ";
             std::cin >> std::hex >> address >> std::dec;
 
-            machine.loadProgram(name, address);
-        } else if (choice == 2) {
-            std::cout << "Overwrite is not implemented yet.\n";
-        } else if (choice == 3) {
-            startExecution();
+            if (machine.loadProgram(name, address)) {
+                programLoaded = true;
+                std::cout << "Program loaded successfully.\n";
+            } 
+            else {
+                programLoaded = false;
+                std::cout << "Error: Loading program failed.\n";
+            }
+        }  
+        else if (choice == 2) {
+            int target;
+            std::cout << "Overwrite: 1-Register, 2-Memory cell: ";
+            std::cin >> target;
+
+            if (target == 1) {
+                int id, value;
+                std::cout << "Register number (hex, 0-F): ";
+                std::cin >> std::hex >> id;
+                std::cout << "New value (hex, 00-FF): ";
+                std::cin >> value >> std::dec;
+
+                if (id < 0 || id > 15 || value < 0 || value > 255) {
+                    std::cout << "Error: register or value out of range.\n";
+                } 
+                else {
+                    machine.editRegister(id, value);
+                    std::cout << "Register updated.\n";
+                }
+            } 
+            else if (target == 2) {
+                int address, value;
+                std::cout << "Memory address (hex, 00-FF): ";
+                std::cin >> std::hex >> address;
+                std::cout << "New value (hex, 00-FF): ";
+                std::cin >> value >> std::dec;
+
+                if (address < 0 || address > 255 || value < 0 || value > 255) {
+                    std::cout << "Error: address or value out of range.\n";
+                } else {
+                    machine.editMemory(address, value);
+                    std::cout << "Memory cell updated.\n";
+                }
+            } 
+            else {
+                std::cout << "Invalid choice.\n";
+            }
+        } 
+        else if (choice == 3) {
+            if (!programLoaded) {
+                std::cout << "Error: Cannot run. No valid program loaded.\n";
+            } else {
+                startExecution();
+            }
         } else if (choice == 4) {
             return;
         } else {
@@ -39,6 +89,7 @@ while (true) {
         }
     }
 }
+
 void SimulatorUI::showMachineState() {
     std::cout<< "\nCPU & Memory State\n";
     machine.showStatus();
@@ -50,11 +101,8 @@ void SimulatorUI::startExecution() {
     if (mode == 1) {
         machine.run();
         showMachineState(); 
-    } else if (mode == 2) {
-        machine.step();
-        showMachineState();
-        std::cout<< "Press enter to execute";
-        std::cin.ignore();
-        std::cin.get();
+    } 
+    else if (mode == 2) {
+       machine.runStepMode();
+        }
     }
-}

@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Vole_machine.h" 
 
+
 class SimulatorUI {
 private:
     VoleMachine machine; 

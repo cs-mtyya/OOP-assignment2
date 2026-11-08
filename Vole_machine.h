@@ -21,8 +21,7 @@ private:
 public:
     
     VoleMachine();
-
-    
+    void runStepMode();
     bool loadProgram(const std::string& fileName, uint8_t startAddress);
     void run();
     void step();

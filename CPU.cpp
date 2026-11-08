@@ -63,8 +63,9 @@ StepResult CPU::step(Memory& memory, RegisterFile& registers) {
     pc_ = static_cast<std::uint8_t>(pc_ + 2);
 
     Instruction instruction(ir_);
-    if (!instruction.isValid()) {
+        if (!instruction.isValid()) {
         halted_ = true;
+        errorMessage = invalidMessage(ir_, instructionAddress);   // <-- ADD THIS LINE
         return {StepStatus::InvalidInstruction,
                 invalidMessage(ir_, instructionAddress), instructionAddress, ir_};
     }
@@ -80,12 +81,12 @@ StepResult CPU::step(Memory& memory, RegisterFile& registers) {
 }
 
 void CPU::execute(const Instruction& instruction,
-                  Memory& memory,
-                  RegisterFile& registers) {
-    std::uint8_t r = instruction.r();
-    std::uint8_t s = instruction.s();
-    std::uint8_t t = instruction.t();
-    std::uint8_t address = instruction.address();
+    Memory& memory,
+    RegisterFile& registers) {
+        std::uint8_t r = instruction.r();
+        std::uint8_t s = instruction.s();
+        std::uint8_t t = instruction.t();
+        std::uint8_t address = instruction.address();
 
     switch (instruction.opcode()) {
         case 0x1:
@@ -139,6 +140,7 @@ void CPU::execute(const Instruction& instruction,
 
 void CPU::reset(std::uint8_t startAddress) noexcept {
     pc_ = startAddress;
+    errorMessage.clear();   
     ir_ = 0;
     halted_ = false;
 }
