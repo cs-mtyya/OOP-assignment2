@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "Vole_machine.h"
+#include "../Vole_machine.h"
 
 #include <QMainWindow>
 #include <QString>
@@ -9,7 +9,6 @@
 class QLineEdit;
 class QLabel;
 class QPushButton;
-class QSpinBox;
 class QTextEdit;
 
 class MainWindow : public QMainWindow {

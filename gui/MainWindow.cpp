@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "../Instruction.h"
 
 #include <QFileDialog>
 #include <QFontDatabase>
@@ -9,6 +10,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -332,8 +334,42 @@ void MainWindow::stepProgram() {
     if (!programLoaded_) {
         return;
     }
-    machine_.step();
-    refreshStatus(QStringLiteral("Executed one instruction."));
+
+    std::string status;
+    {
+        ConsoleCapture capture;
+        machine_.step();
+        machine_.showStatus();
+        status = capture.text();
+    }
+
+    QString message = QStringLiteral("Executed one instruction.");
+    const QString statusText = QString::fromLocal8Bit(status.data(),
+                                                       static_cast<int>(status.size()));
+    const QRegularExpression pcPattern(QStringLiteral("PC: 0x([0-9A-Fa-f]+)"));
+    const QRegularExpression irPattern(QStringLiteral("IR: 0x([0-9A-Fa-f]+)"));
+    const auto pcMatch = pcPattern.match(statusText);
+    const auto irMatch = irPattern.match(statusText);
+    const bool halted = statusText.contains(QStringLiteral("Halted: true"),
+                                            Qt::CaseInsensitive);
+
+    if (halted && pcMatch.hasMatch() && irMatch.hasMatch()) {
+        bool pcValid = false;
+        bool irValid = false;
+        const unsigned pc = pcMatch.captured(1).toUInt(&pcValid, 16);
+        const unsigned rawInstruction = irMatch.captured(1).toUInt(&irValid, 16);
+        if (pcValid && irValid &&
+            !Instruction(static_cast<std::uint16_t>(rawInstruction)).isValid()) {
+            const unsigned instructionAddress = (pc - 2u) & 0xFFu;
+            message = QStringLiteral("CPU Error: Invalid instruction 0x%1 at address 0x%2.")
+                          .arg(QString::number(rawInstruction, 16)
+                                   .rightJustified(4, QLatin1Char('0')).toUpper(),
+                               QString::number(instructionAddress, 16)
+                                   .rightJustified(2, QLatin1Char('0')).toUpper());
+        }
+    }
+
+    refreshStatus(message);
 }
 
 void MainWindow::resetMachine() {

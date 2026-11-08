@@ -65,7 +65,7 @@ StepResult CPU::step(Memory& memory, RegisterFile& registers) {
     Instruction instruction(ir_);
         if (!instruction.isValid()) {
         halted_ = true;
-        errorMessage = invalidMessage(ir_, instructionAddress);   // <-- ADD THIS LINE
+        errorMessage = invalidMessage(ir_, instructionAddress);   
         return {StepStatus::InvalidInstruction,
                 invalidMessage(ir_, instructionAddress), instructionAddress, ir_};
     }

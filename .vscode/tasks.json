@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Open Vole Machine GUI",
+      "type": "shell",
+      "command": "${workspaceFolder}\\gui\\build\\release\\VoleMachineQt.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
