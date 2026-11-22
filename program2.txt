@@ -1,0 +1,24 @@
+; ------------------------------------------------------------
+; Custom Vole Machine Program 1 (Created by Sara)
+; Purpose:
+; 1. Load hexadecimal number 5B into register 1
+; 2. Copy it to register 2
+; 3. Rotate register 2 right by 2 bits
+; 4. Output the result to the screen (Address FF)
+; 5. Load mask 0F and apply AND logic, then output to screen (Address FF)
+; 6. Halt
+; ------------------------------------------------------------
+
+215B ; Load immediate value 5B into register 1
+4012 ; Copy register 1 into register 2
+A202 ; Rotate register 2 right by 2 bits
+32FF ; Store register 2 into memory [FF] (screen output)
+200F ; Load immediate value 0F into register 0 (mask)
+8320 ; Apply AND to registers 2 and 0, store result in register 3
+33FF ; Store register 3 into memory [FF] (screen output)
+C000 ; Halt execution
+
+
+
+
+

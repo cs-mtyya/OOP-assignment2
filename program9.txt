@@ -1,0 +1,13 @@
+200F      ; Load register 0 directly with immediate value 0F
+2103      ; Load register 1 directly with immediate value 03
+8201      ; Bitwise AND between reg 0 and reg 1, store in reg 2 (0F & 03 = 03)
+32F0      ; Store reg 2 into memory cell F0
+2355      ; Load register 3 directly with immediate value 55
+24AA      ; Load register 4 directly with immediate value AA
+7534      ; Bitwise OR between reg 3 and reg 4, store in reg 5 (55 | AA = FF)
+35F1      ; Store reg 5 into memory cell F1
+16F0      ; Load register 6 from memory cell F0 (retrieving 03)
+17F1      ; Load register 7 from memory cell F1 (retrieving FF)
+9467      ; Bitwise XOR between reg 6 and reg 7, store in reg 4 (03 ^ FF = FC)
+34FF      ; Store the final processed value from reg 4 into memory[FF] (screen output)
+C000      ; Halt

@@ -2,6 +2,7 @@
 #include "../Instruction.h"
 
 #include <QFileDialog>
+#include <QFile>
 #include <QFontDatabase>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -10,10 +11,14 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QPlainTextEdit>
 #include <QRegularExpression>
+#include <QTabWidget>
 #include <QTextEdit>
+#include <QTemporaryFile>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QDir>
 
 #include <cstdint>
 #include <iostream>
@@ -79,6 +84,8 @@ MainWindow::MainWindow(QWidget* parent)
       editRegisterButton_(nullptr),
       editMemoryButton_(nullptr),
       stateBadge_(nullptr),
+    programEditor_(nullptr),
+    monitorTabs_(nullptr),
       statusView_(nullptr),
       programLoaded_(false) {
     setWindowTitle(QStringLiteral("Vole Machine Simulator"));
@@ -123,7 +130,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto* programLayout = new QVBoxLayout(programGroup);
     programLayout->setSpacing(10);
     programPath_ = new QLineEdit(programGroup);
-    programPath_->setPlaceholderText(QStringLiteral("Select a Vole program (.txt)"));
+    programPath_->setPlaceholderText(QStringLiteral("Optional: open an existing .txt file"));
     auto* browseButton = new QPushButton(QStringLiteral("Browse files  ↗"), programGroup);
     auto* fileRow = new QHBoxLayout;
     fileRow->addWidget(programPath_, 1);
@@ -132,20 +139,24 @@ MainWindow::MainWindow(QWidget* parent)
     addressLabel->setObjectName(QStringLiteral("fieldLabel"));
     startAddress_ = makeHexInput(QStringLiteral("00"), 2);
     startAddress_->setToolTip(QStringLiteral("Hexadecimal start address, 00–FE"));
-    auto* loadButton = new QPushButton(QStringLiteral("↓   LOAD INTO MEMORY"), programGroup);
+    auto* loadButton = new QPushButton(QStringLiteral("↓   LOAD EDITOR INTO MEMORY"), programGroup);
     loadButton->setObjectName(QStringLiteral("primaryButton"));
     loadButton->setMinimumHeight(42);
     programLayout->addLayout(fileRow);
     programLayout->addWidget(addressLabel);
     programLayout->addWidget(startAddress_, 0, Qt::AlignLeft);
     programLayout->addWidget(loadButton);
+    auto* formatHint = new QLabel(
+        QStringLiteral("Write or paste 4-digit hex instructions in the Code Editor tab."), programGroup);
+    formatHint->setObjectName(QStringLiteral("editHint"));
+    programLayout->addWidget(formatHint);
     controlColumn->addWidget(programGroup);
 
     auto* executionGroup = new QGroupBox(QStringLiteral("02   /   EXECUTION"), central);
     executionGroup->setObjectName(QStringLiteral("panel"));
     auto* executionLayout = new QVBoxLayout(executionGroup);
     executionLayout->setSpacing(9);
-    runButton_ = new QPushButton(QStringLiteral("▶   RUN PROGRAM"), executionGroup);
+    runButton_ = new QPushButton(QStringLiteral("▶   RUN EDITOR CODE"), executionGroup);
     runButton_->setObjectName(QStringLiteral("runButton"));
     stepButton_ = new QPushButton(QStringLiteral("▸   STEP ONE INSTRUCTION"), executionGroup);
     resetButton_ = new QPushButton(QStringLiteral("↺   RESET MACHINE"), executionGroup);
@@ -202,10 +213,31 @@ MainWindow::MainWindow(QWidget* parent)
     controlColumn->addStretch();
     workspace->addLayout(controlColumn, 4);
 
-    auto* monitorGroup = new QGroupBox(QStringLiteral("LIVE MACHINE MONITOR"), central);
-    monitorGroup->setObjectName(QStringLiteral("monitorPanel"));
+    monitorTabs_ = new QTabWidget(central);
+    monitorTabs_->setObjectName(QStringLiteral("monitorTabs"));
+    auto* editorPage = new QWidget(monitorTabs_);
+    auto* editorLayout = new QVBoxLayout(editorPage);
+    editorLayout->setContentsMargins(12, 12, 12, 12);
+    auto* editorToolbar = new QHBoxLayout;
+    auto* editorHint = new QLabel(
+        QStringLiteral("One 4-digit hexadecimal instruction per line. Lines starting with ; are comments."),
+        editorPage);
+    editorHint->setObjectName(QStringLiteral("monitorHint"));
+    auto* saveButton = new QPushButton(QStringLiteral("Save As…"), editorPage);
+    editorToolbar->addWidget(editorHint, 1);
+    editorToolbar->addWidget(saveButton);
+    programEditor_ = new QPlainTextEdit(editorPage);
+    programEditor_->setObjectName(QStringLiteral("codeEditor"));
+    programEditor_->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    programEditor_->setPlaceholderText(
+        QStringLiteral("; Enter your program here\n200A\n210F\nC000"));
+    editorLayout->addLayout(editorToolbar);
+    editorLayout->addWidget(programEditor_, 1);
+    monitorTabs_->addTab(editorPage, QStringLiteral("Code Editor"));
+
+    auto* monitorGroup = new QWidget(monitorTabs_);
     auto* monitorLayout = new QVBoxLayout(monitorGroup);
-    monitorLayout->setContentsMargins(14, 14, 14, 14);
+    monitorLayout->setContentsMargins(12, 12, 12, 12);
     auto* monitorHint = new QLabel(
         QStringLiteral("CPU  /  REGISTERS  /  256-BYTE MEMORY  /  SCREEN"), monitorGroup);
     monitorHint->setObjectName(QStringLiteral("monitorHint"));
@@ -217,7 +249,8 @@ MainWindow::MainWindow(QWidget* parent)
     statusView_->setMinimumWidth(530);
     monitorLayout->addWidget(monitorHint);
     monitorLayout->addWidget(statusView_, 1);
-    workspace->addWidget(monitorGroup, 7);
+    monitorTabs_->addTab(monitorGroup, QStringLiteral("Machine Monitor"));
+    workspace->addWidget(monitorTabs_, 7);
     root->addLayout(workspace, 1);
 
     setCentralWidget(central);
@@ -241,6 +274,13 @@ MainWindow::MainWindow(QWidget* parent)
         "QLabel#editHint { color: #8292aa; font-size: 9px; font-weight: 400; letter-spacing: 0px; }"
         "QTextEdit#terminal { background: #070b13; color: #9debd9; border: 1px solid #1d2b37;"
         " border-radius: 8px; padding: 14px; selection-background-color: #0e7490; font-size: 10pt; }"
+        "QPlainTextEdit#codeEditor { background: #070b13; color: #9debd9; border: 1px solid #1d2b37;"
+        " border-radius: 8px; padding: 12px; selection-background-color: #0e7490; font-size: 10pt; }"
+        "QTabWidget#monitorTabs::pane { border: 1px solid #202b3e; border-radius: 8px; top: -1px; }"
+        "QTabBar::tab { background: #111a2a; color: #8292aa; padding: 9px 16px;"
+        " border: 1px solid #202b3e; border-bottom: none; border-top-left-radius: 6px;"
+        " border-top-right-radius: 6px; margin-right: 4px; }"
+        "QTabBar::tab:selected { background: #0e1422; color: #5eead4; }"
         "QPushButton { background: #182235; border: 1px solid #2b3a51; border-radius: 7px;"
         " padding: 9px 12px; color: #c9d6e8; font-weight: 700; }"
         "QPushButton:hover { background: #223149; border-color: #3a526f; color: #ffffff; }"
@@ -252,12 +292,18 @@ MainWindow::MainWindow(QWidget* parent)
         "QPushButton#runButton:hover { background: #6ee7b7; }"));
 
     connect(browseButton, &QPushButton::clicked, this, [this] { chooseProgram(); });
+    connect(saveButton, &QPushButton::clicked, this, [this] { saveProgramAs(); });
     connect(loadButton, &QPushButton::clicked, this, [this] { loadProgram(); });
     connect(runButton_, &QPushButton::clicked, this, [this] { runProgram(); });
     connect(stepButton_, &QPushButton::clicked, this, [this] { stepProgram(); });
     connect(resetButton_, &QPushButton::clicked, this, [this] { resetMachine(); });
     connect(editRegisterButton_, &QPushButton::clicked, this, [this] { editRegister(); });
     connect(editMemoryButton_, &QPushButton::clicked, this, [this] { editMemory(); });
+    connect(programEditor_, &QPlainTextEdit::textChanged, this, [this] {
+        machine_.reset();
+        setMachineLoaded(false);
+        refreshStatus(QStringLiteral("Editor changed. Run to load and execute the current code."));
+    });
 
     setMachineLoaded(false);
     refreshStatus(QStringLiteral("Ready. Load a program to begin."));
@@ -268,39 +314,78 @@ void MainWindow::chooseProgram() {
         this, QStringLiteral("Open Vole program"), QString(),
         QStringLiteral("Text files (*.txt);;All files (*)"));
     if (!path.isEmpty()) {
+        QFile sourceFile(path);
+        if (!sourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QMessageBox::warning(this, QStringLiteral("Could not open file"),
+                                 QStringLiteral("The selected program file could not be read."));
+            return;
+        }
+        programEditor_->setPlainText(QString::fromUtf8(sourceFile.readAll()));
         programPath_->setText(path);
     }
 }
 
+void MainWindow::saveProgramAs() {
+    const QString path = QFileDialog::getSaveFileName(
+        this, QStringLiteral("Save Vole program"), QStringLiteral("program.txt"),
+        QStringLiteral("Text files (*.txt);;All files (*)"));
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QFile destination(path);
+    if (!destination.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, QStringLiteral("Could not save file"),
+                             QStringLiteral("The selected file could not be written."));
+        return;
+    }
+    destination.write(programEditor_->toPlainText().toUtf8());
+    programPath_->setText(path);
+}
+
 void MainWindow::loadProgram() {
+    setMachineLoaded(false);
     unsigned address = 0;
     if (!parseHexValue(startAddress_, 0xFF, address)) {
         QMessageBox::warning(this, QStringLiteral("Invalid start address"),
                              QStringLiteral("Enter a hexadecimal address from 00 to FF."));
         return;
     }
-    if (programPath_->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, QStringLiteral("No program selected"),
-                             QStringLiteral("Choose a program file before loading."));
+    const QByteArray source = programEditor_->toPlainText().toUtf8();
+    if (source.trimmed().isEmpty()) {
+        QMessageBox::warning(this, QStringLiteral("Program is empty"),
+                             QStringLiteral("Enter or open a hexadecimal program before loading."));
         return;
     }
 
     bool loaded = false;
     std::string diagnostics;
     {
+        QTemporaryFile temporary(QDir::current().filePath(QStringLiteral(".vole_gui_XXXXXX")));
+        if (!temporary.open()) {
+            QMessageBox::critical(this, QStringLiteral("Could not prepare program"),
+                                  QStringLiteral("A temporary file could not be created for loading."));
+            return;
+        }
+        if (temporary.write(source) != source.size() || !temporary.flush()) {
+            QMessageBox::critical(this, QStringLiteral("Could not prepare program"),
+                                  QStringLiteral("The program text could not be written for loading."));
+            return;
+        }
+        const QByteArray localPath = QDir::toNativeSeparators(temporary.fileName()).toLocal8Bit();
+        temporary.close();
+
         ConsoleCapture capture(false, true);
-        const QByteArray localPath = programPath_->text().toLocal8Bit();
-        loaded = machine_.loadProgram(localPath.toStdString(),
-                                      static_cast<std::uint8_t>(address));
+        loaded = machine_.loadProgram(localPath.toStdString(), static_cast<std::uint8_t>(address));
         diagnostics = capture.text();
     }
 
     setMachineLoaded(loaded);
     if (loaded) {
-        refreshStatus(QStringLiteral("Loaded: %1 at 0x%2")
-                          .arg(programPath_->text(),
-                               QString::number(address, 16)
+        refreshStatus(QStringLiteral("Loaded editor program at 0x%1")
+                          .arg(QString::number(address, 16)
                                    .rightJustified(2, QLatin1Char('0')).toUpper()));
+        monitorTabs_->setCurrentIndex(1);
     } else {
         QString message = QStringLiteral("Program could not be loaded.");
         if (!diagnostics.empty()) {
@@ -313,6 +398,9 @@ void MainWindow::loadProgram() {
 }
 
 void MainWindow::runProgram() {
+    // Always load the current editor contents so Run works directly from the editor
+    // and never executes an older version of the program.
+    loadProgram();
     if (!programLoaded_) {
         return;
     }
@@ -445,13 +533,13 @@ void MainWindow::refreshStatus(const QString& message) {
             "color: #a5b4fc; background: #191a32; border: 1px solid #35365f;"
             " border-radius: 12px; padding: 8px 14px; font-size: 9px; font-weight: 800; letter-spacing: 1px;"));
     }
-    runButton_->setEnabled(programLoaded_ && !halted);
+    runButton_->setEnabled(true);
     stepButton_->setEnabled(programLoaded_ && !halted);
 }
 
 void MainWindow::setMachineLoaded(bool loaded) {
     programLoaded_ = loaded;
-    runButton_->setEnabled(loaded);
+    runButton_->setEnabled(true);
     stepButton_->setEnabled(loaded);
     resetButton_->setEnabled(loaded);
     editRegisterButton_->setEnabled(loaded);

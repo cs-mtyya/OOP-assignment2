@@ -1,0 +1,26 @@
+2011  ; Load immediate value 11 into register 0
+2122  ; Load immediate value 22 into register 1
+2233  ; Load immediate value 33 into register 2
+2344  ; Load immediate value 44 into register 3
+
+30FF  ; Store register 0 into memory[FF] (screen output)
+31FF  ; Store register 1 into memory[FF] (screen output)
+32FF  ; Store register 2 into memory[FF] (screen output)
+33FF  ; Store register 3 into memory[FF] (screen output)
+
+3040  ; Store register 0 into memory[40]
+3141  ; Store register 1 into memory[41]
+3242  ; Store register 2 into memory[42]
+3343  ; Store register 3 into memory[43]
+
+1443  ; Load memory[43] into register 4 (register 4 = 44)
+1542  ; Load memory[42] into register 5 (register 5 = 33)
+1641  ; Load memory[41] into register 6 (register 6 = 22)
+1740  ; Load memory[40] into register 7 (register 7 = 11)
+
+34FF  ; Store register 4 into memory[FF] (screen output)
+35FF  ; Store register 5 into memory[FF] (screen output)
+36FF  ; Store register 6 into memory[FF] (screen output)
+37FF  ; Store register 7 into memory[FF] (screen output)
+
+C000  ; Halt

@@ -1,0 +1,23 @@
+
+2005 ; Load immediate value 05 into Register 0
+210A ; Load immediate value 0A into Register 1
+2203 ; Load immediate value 03 into Register 2
+
+3020 ; Store Reg 0 (05) in Memory location 20
+3122 ; Store Reg 1 (0A) in Memory location 22
+3224 ; Store Reg 2 (03) in Memory location 24
+
+1320 ; Read Memory location 20 into Register 3
+1422 ; Read Memory location 22 into Register 4
+
+7534 ; Bitwise OR between Reg 3 (05) and Reg 4 (0A) -> Store in Reg 5 (0F)
+35FF ; Display result (0F) on Screen
+
+1624 ; Read Memory location 24 into Register 6
+5756 ; Add Reg 5 (0F) and Reg 6 (03) -> Store in Reg 7 (12 hex / 18 dec)
+
+
+3726 ; Save final result (12) in Memory location 26
+37FF ; Display final result (12) on Screen
+
+C000 ; Halt program execution

@@ -8,7 +8,9 @@
 
 class QLineEdit;
 class QLabel;
+class QPlainTextEdit;
 class QPushButton;
+class QTabWidget;
 class QTextEdit;
 
 class MainWindow : public QMainWindow {
@@ -17,6 +19,7 @@ public:
 
 private:
     void chooseProgram();
+    void saveProgramAs();
     void loadProgram();
     void runProgram();
     void stepProgram();
@@ -39,6 +42,8 @@ private:
     QPushButton* editRegisterButton_;
     QPushButton* editMemoryButton_;
     QLabel* stateBadge_;
+    QPlainTextEdit* programEditor_;
+    QTabWidget* monitorTabs_;
     QTextEdit* statusView_;
     bool programLoaded_;
 };
